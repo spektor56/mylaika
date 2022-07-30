@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from io import BytesIO
 
-from atomicwrites import atomic_write
+from laika.file_helpers import atomic_write_in_dir
 
 from laika.ephemeris import EphemerisType
 from .constants import SECS_IN_HR, SECS_IN_DAY, SECS_IN_WEEK
@@ -272,14 +272,14 @@ def download_and_cache_file(url_base, folder_path: str, cache_dir: str, filename
       data_zipped = download_file(url_base, folder_path, filename_zipped)
     except (IOError, pycurl.error, socket.timeout):
       unix_time = time.time()
-      with atomic_write(filepath_attempt, mode='w') as wf:
+      with atomic_write_in_dir(filepath_attempt, mode="w") as wf:
         wf.write(str(unix_time))
       raise IOError(f"Could not download {folder_path + filename_zipped} from {url_base} ")
 
     os.makedirs(folder_path_abs, exist_ok=True)
     ephem_bytes = hatanaka.decompress(data_zipped)
     try:
-      with atomic_write(filepath, mode='wb', overwrite=overwrite) as f:
+      with atomic_write_in_dir(filepath, mode="wb", overwrite=overwrite) as f:
         f.write(ephem_bytes)
     except FileExistsError:
       # Only happens when same file is downloaded in parallel by another process.
